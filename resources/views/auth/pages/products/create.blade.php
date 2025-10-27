@@ -1,0 +1,168 @@
+<x-layouts.auth page-title="Create Product">
+
+    <div class="row">
+        <div class="col-md-12">
+            <x-auth.card card-header="Create Product">
+                <form action="{{ route('products.store') }}" method="POST">
+                    @csrf
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="title">Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('title') is-invalid @enderror" 
+                                       id="title" name="title" value="{{ old('title') }}" required>
+                                @error('title')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="asin">ASIN</label>
+                                <input type="text" class="form-control @error('asin') is-invalid @enderror" 
+                                       id="asin" name="asin" value="{{ old('asin') }}">
+                                @error('asin')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ean">EAN</label>
+                                <input type="text" class="form-control @error('ean') is-invalid @enderror" 
+                                       id="ean" name="ean" value="{{ old('ean') }}">
+                                @error('ean')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="product_url">Product URL</label>
+                                <input type="url" class="form-control @error('product_url') is-invalid @enderror" 
+                                       id="product_url" name="product_url" value="{{ old('product_url') }}">
+                                @error('product_url')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="img_url">Image URL</label>
+                                <input type="url" class="form-control @error('img_url') is-invalid @enderror" 
+                                       id="img_url" name="img_url" value="{{ old('img_url') }}">
+                                @error('img_url')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea class="form-control @error('description') is-invalid @enderror" 
+                                          id="description" name="description" rows="4">{{ old('description') }}</textarea>
+                                @error('description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="current_price">Current Price</label>
+                                <input type="number" step="0.01" class="form-control @error('current_price') is-invalid @enderror" 
+                                       id="current_price" name="current_price" value="{{ old('current_price') }}">
+                                @error('current_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="old_price">Old Price</label>
+                                <input type="number" step="0.01" class="form-control @error('old_price') is-invalid @enderror" 
+                                       id="old_price" name="old_price" value="{{ old('old_price') }}">
+                                @error('old_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="de_price">DE Price</label>
+                                <input type="number" step="0.01" class="form-control @error('de_price') is-invalid @enderror" 
+                                       id="de_price" name="de_price" value="{{ old('de_price') }}">
+                                @error('de_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="es_price">ES Price</label>
+                                <input type="number" step="0.01" class="form-control @error('es_price') is-invalid @enderror" 
+                                       id="es_price" name="es_price" value="{{ old('es_price') }}">
+                                @error('es_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="fr_price">FR Price</label>
+                                <input type="number" step="0.01" class="form-control @error('fr_price') is-invalid @enderror" 
+                                       id="fr_price" name="fr_price" value="{{ old('fr_price') }}">
+                                @error('fr_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="it_price">IT Price</label>
+                                <input type="number" step="0.01" class="form-control @error('it_price') is-invalid @enderror" 
+                                       id="it_price" name="it_price" value="{{ old('it_price') }}">
+                                @error('it_price')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="posted_at">Posted At</label>
+                                <input type="datetime-local" class="form-control @error('posted_at') is-invalid @enderror" 
+                                       id="posted_at" name="posted_at" value="{{ old('posted_at') }}">
+                                @error('posted_at')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Create Product</button>
+                        <a href="{{ route('products.index') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </x-auth.card>
+        </div>
+    </div>
+
+</x-layouts.auth>
