@@ -14,12 +14,14 @@ return new class extends Migration
     public function up()
     {
         Schema::create('files', function (Blueprint $table) {
-            $table->UUID('id')->primary();
+            $table->uuid('id')->primary();
 
             $table->string('name');
             $table->string('path');
 
-            $table->uuidMorphs('file');
+            $table->string('file_type', 100);
+            $table->string('file_id', 36);
+            $table->index('file_id');
 
             $table->string('type')->default('image');
             $table->string('status')->default(1);

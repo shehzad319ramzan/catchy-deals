@@ -33,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set default string length for MySQL indexes
+        Schema::defaultStringLength(191);
+
         try {
 
             if (Helpers::dbConnectionStatus()) {
