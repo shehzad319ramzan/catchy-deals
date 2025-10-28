@@ -21,7 +21,7 @@
                             {{ $slot }}
 
                             <hr>
-                            <x-social-logins />
+                            {{-- <x-social-logins /> --}}
                         </div>
                     </x-auth.card>
 

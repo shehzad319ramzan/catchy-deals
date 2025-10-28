@@ -48,6 +48,6 @@ class SettingSeeder extends Seeder
         $setting->smtp_encryption = 'tls';
 
         $setting->save();
-        $setting->file()->create(['name' => 'logo.svg', 'path' => 'settings/logo.svg', 'type' => 'logo']);
+        $setting->file()->create(['name' => 'logo.svg', 'path' => 'settings/logo.png', 'type' => 'logo']);
     }
 }
