@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
 
     // List all products (public)
-    // Route::get('/products', [ProductApiController::class, 'index']);
+    Route::get('/get-products', [ProductApiController::class, 'index']);
 
     // Add new product (public - no authentication required)
     Route::post('/products', [ProductApiController::class, 'store']);
