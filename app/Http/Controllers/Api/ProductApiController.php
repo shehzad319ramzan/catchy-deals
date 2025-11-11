@@ -41,45 +41,50 @@ class ProductApiController extends Controller
                 $query->where('status', $request->get('status'));
             }
             
-            // Check if we should return all products
-            $perPage = $request->get('per_page', 15);
-            $getAll = $request->get('get_all', false);
+            // DEFAULT: Return ALL products without pagination
+            // Only use pagination if explicitly requested with 'paginate=true' parameter
+            $shouldPaginate = $request->get('paginate', false);
             
-            if ($getAll || $perPage === 'all' || $perPage === '0') {
-                // Return all products without pagination
-                $products = $query->get();
-                $total = $products->count();
+            if ($shouldPaginate === true || $shouldPaginate === 'true' || $shouldPaginate === '1') {
+                // Pagination requested explicitly
+                $perPage = $request->get('per_page', 15);
+                $perPage = (int)$perPage;
+                if ($perPage <= 0) {
+                    $perPage = 15;
+                }
+                $page = $request->get('page', 1);
+                $products = $query->paginate($perPage, ['*'], 'page', $page);
                 
                 return response()->json([
                     'success' => true,
                     'message' => 'Products retrieved successfully',
                     'data' => new ProductCollection($products),
                     'meta' => [
-                        'current_page' => 1,
-                        'last_page' => 1,
-                        'per_page' => $total,
-                        'total' => $total,
-                        'from' => 1,
-                        'to' => $total,
+                        'current_page' => $products->currentPage(),
+                        'last_page' => $products->lastPage(),
+                        'per_page' => $products->perPage(),
+                        'total' => $products->total(),
+                        'from' => $products->firstItem(),
+                        'to' => $products->lastItem(),
                     ]
                 ]);
             }
             
-            // Pagination
-            $page = $request->get('page', 1);
-            $products = $query->paginate((int)$perPage, ['*'], 'page', $page);
+            // Return ALL products (DEFAULT BEHAVIOR)
+            $products = $query->get();
+            $total = $products->count();
             
             return response()->json([
                 'success' => true,
                 'message' => 'Products retrieved successfully',
                 'data' => new ProductCollection($products),
                 'meta' => [
-                    'current_page' => $products->currentPage(),
-                    'last_page' => $products->lastPage(),
-                    'per_page' => $products->perPage(),
-                    'total' => $products->total(),
-                    'from' => $products->firstItem(),
-                    'to' => $products->lastItem(),
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $total,
+                    'total' => $total,
+                    'from' => 1,
+                    'to' => $total,
                 ]
             ]);
             
