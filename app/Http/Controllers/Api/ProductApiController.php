@@ -23,10 +23,6 @@ class ProductApiController extends Controller
         try {
             $query = product::query();
             
-            // Pagination
-            $perPage = $request->get('per_page', 15);
-            $page = $request->get('page', 1);
-            
             // Sorting
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
@@ -45,7 +41,33 @@ class ProductApiController extends Controller
                 $query->where('status', $request->get('status'));
             }
             
-            $products = $query->paginate($perPage, ['*'], 'page', $page);
+            // Check if we should return all products
+            $perPage = $request->get('per_page', 15);
+            $getAll = $request->get('get_all', false);
+            
+            if ($getAll || $perPage === 'all' || $perPage === '0') {
+                // Return all products without pagination
+                $products = $query->get();
+                $total = $products->count();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Products retrieved successfully',
+                    'data' => new ProductCollection($products),
+                    'meta' => [
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'per_page' => $total,
+                        'total' => $total,
+                        'from' => 1,
+                        'to' => $total,
+                    ]
+                ]);
+            }
+            
+            // Pagination
+            $page = $request->get('page', 1);
+            $products = $query->paginate((int)$perPage, ['*'], 'page', $page);
             
             return response()->json([
                 'success' => true,
