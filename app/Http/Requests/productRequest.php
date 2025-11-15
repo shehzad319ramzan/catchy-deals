@@ -22,11 +22,13 @@ class productRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:255',
+            // Title: No max limit - accepts very long titles (LONGTEXT in database supports up to 4GB)
+            'title' => 'required|string',
             'asin' => 'nullable|string|max:255',
             'ean' => 'nullable|string|max:255',
             'product_url' => 'nullable|url',
             'img_url' => 'nullable|url',
+            // Description: No max limit - accepts very long descriptions (LONGTEXT in database supports up to 4GB)
             'description' => 'nullable|string',
             'current_price' => 'nullable|numeric|min:0',
             'old_price' => 'nullable|numeric|min:0',

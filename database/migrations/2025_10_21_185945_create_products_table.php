@@ -16,12 +16,12 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->UUID('id')->primary();
 
-            $table->string('title');
+            $table->longText('title');
             $table->string('asin')->nullable();
             $table->string('ean')->nullable();
             $table->text('product_url')->nullable();
             $table->text('img_url')->nullable();
-            $table->text('description')->nullable();
+            $table->longText('description')->nullable();
             $table->decimal('current_price', 10, 2)->nullable();
             $table->decimal('old_price', 10, 2)->nullable();
             $table->decimal('de_price', 10, 2)->nullable();
