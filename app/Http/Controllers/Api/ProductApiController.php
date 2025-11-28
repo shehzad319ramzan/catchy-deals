@@ -21,7 +21,30 @@ class ProductApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = product::query();
+            // Get unique product URLs - only the latest product for each product_url
+            // Using a subquery to find the product with the latest created_at for each product_url
+            $uniqueProductIds = product::select('id')
+                ->where('created_at', '>=', now()->subHours(48))
+                ->whereNotNull('product_url')
+                ->whereRaw('created_at = (
+                    SELECT MAX(p2.created_at) 
+                    FROM products as p2 
+                    WHERE p2.product_url = products.product_url 
+                    AND p2.created_at >= ? 
+                    AND p2.product_url IS NOT NULL
+                )', [now()->subHours(48)])
+                ->pluck('id');
+            
+            // Also include products with null product_url (they are unique by default)
+            $nullUrlProductIds = product::where('created_at', '>=', now()->subHours(48))
+                ->whereNull('product_url')
+                ->pluck('id');
+            
+            // Merge both sets of IDs
+            $allUniqueIds = $uniqueProductIds->merge($nullUrlProductIds);
+            
+            // Build the main query with unique products
+            $query = product::whereIn('id', $allUniqueIds);
             
             // Sorting
             $sortBy = $request->get('sort_by', 'created_at');
@@ -106,11 +129,20 @@ class ProductApiController extends Controller
     public function store(productRequest $request): JsonResponse
     {
         try {
+            // Delete products older than 48 hours before creating a new one
+            $deletedCount = product::where('created_at', '<', now()->subHours(48))->delete();
+            
+            // Create the new product
             $product = product::create($request->validated());
+            
+            $message = 'Product created successfully';
+            if ($deletedCount > 0) {
+                $message .= " ({$deletedCount} old product(s) deleted)";
+            }
             
             return response()->json([
                 'success' => true,
-                'message' => 'Product created successfully',
+                'message' => $message,
                 'data' => new ProductResource($product)
             ], 201);
             
