@@ -44,7 +44,27 @@ class ProductApiController extends Controller
             $allUniqueIds = $uniqueProductIds->merge($nullUrlProductIds);
             
             // Build the main query with unique products
-            $query = product::whereIn('id', $allUniqueIds);
+            // Using select() for eager loading - only fetch needed columns for better performance
+            $query = product::select([
+                'id',
+                'title',
+                'asin',
+                'ean',
+                'product_url',
+                'img_url',
+                'description',
+                'current_price',
+                'old_price',
+                'de_price',
+                'es_price',
+                'fr_price',
+                'it_price',
+                'posted_at',
+                'status',
+                'created_at',
+                'updated_at'
+            ])
+            ->whereIn('id', $allUniqueIds);
             
             // Sorting
             $sortBy = $request->get('sort_by', 'created_at');
@@ -64,50 +84,40 @@ class ProductApiController extends Controller
                 $query->where('status', $request->get('status'));
             }
             
-            // DEFAULT: Return ALL products without pagination
-            // Only use pagination if explicitly requested with 'paginate=true' parameter
-            $shouldPaginate = $request->get('paginate', false);
-            
-            if ($shouldPaginate === true || $shouldPaginate === 'true' || $shouldPaginate === '1') {
-                // Pagination requested explicitly
-                $perPage = $request->get('per_page', 15);
-                $perPage = (int)$perPage;
-                if ($perPage <= 0) {
-                    $perPage = 15;
-                }
-                $page = $request->get('page', 1);
-                $products = $query->paginate($perPage, ['*'], 'page', $page);
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Products retrieved successfully',
-                    'data' => new ProductCollection($products),
-                    'meta' => [
-                        'current_page' => $products->currentPage(),
-                        'last_page' => $products->lastPage(),
-                        'per_page' => $products->perPage(),
-                        'total' => $products->total(),
-                        'from' => $products->firstItem(),
-                        'to' => $products->lastItem(),
-                    ]
-                ]);
+            // DEFAULT: Always use pagination for chunked data loading
+            // Set default per_page to 20 for optimal performance
+            $perPage = $request->get('per_page', 20);
+            $perPage = (int)$perPage;
+            // Limit per_page to max 100 to prevent performance issues
+            if ($perPage <= 0 || $perPage > 100) {
+                $perPage = 20;
             }
             
-            // Return ALL products (DEFAULT BEHAVIOR)
-            $products = $query->get();
-            $total = $products->count();
+            $page = $request->get('page', 1);
+            $page = (int)$page;
+            if ($page <= 0) {
+                $page = 1;
+            }
+            
+            // Use paginate with eager loading optimization
+            // Note: paginate() will use the columns already selected in the query
+            $products = $query->paginate($perPage, ['*'], 'page', $page);
+            
+            // Maintain existing API response structure
+            // ProductCollection handles the 'products' and 'count' structure
+            $collection = new ProductCollection($products);
             
             return response()->json([
                 'success' => true,
                 'message' => 'Products retrieved successfully',
-                'data' => new ProductCollection($products),
+                'data' => $collection,
                 'meta' => [
-                    'current_page' => 1,
-                    'last_page' => 1,
-                    'per_page' => $total,
-                    'total' => $total,
-                    'from' => 1,
-                    'to' => $total,
+                    'current_page' => $products->currentPage(),
+                    'last_page' => $products->lastPage(),
+                    'per_page' => $products->perPage(),
+                    'total' => $products->total(),
+                    'from' => $products->firstItem(),
+                    'to' => $products->lastItem(),
                 ]
             ]);
             
