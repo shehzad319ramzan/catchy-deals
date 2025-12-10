@@ -21,50 +21,7 @@ class ProductApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            // Get unique product URLs - only the latest product for each product_url
-            // Using a subquery to find the product with the latest created_at for each product_url
-            $uniqueProductIds = product::select('id')
-                ->where('created_at', '>=', now()->subHours(48))
-                ->whereNotNull('product_url')
-                ->whereRaw('created_at = (
-                    SELECT MAX(p2.created_at) 
-                    FROM products as p2 
-                    WHERE p2.product_url = products.product_url 
-                    AND p2.created_at >= ? 
-                    AND p2.product_url IS NOT NULL
-                )', [now()->subHours(48)])
-                ->pluck('id');
-            
-            // Also include products with null product_url (they are unique by default)
-            $nullUrlProductIds = product::where('created_at', '>=', now()->subHours(48))
-                ->whereNull('product_url')
-                ->pluck('id');
-            
-            // Merge both sets of IDs
-            $allUniqueIds = $uniqueProductIds->merge($nullUrlProductIds);
-            
-            // Build the main query with unique products
-            // Using select() for eager loading - only fetch needed columns for better performance
-            $query = product::select([
-                'id',
-                'title',
-                'asin',
-                'ean',
-                'product_url',
-                'img_url',
-                'description',
-                'current_price',
-                'old_price',
-                'de_price',
-                'es_price',
-                'fr_price',
-                'it_price',
-                'posted_at',
-                'status',
-                'created_at',
-                'updated_at'
-            ])
-            ->whereIn('id', $allUniqueIds);
+            $query = product::query();
             
             // Sorting
             $sortBy = $request->get('sort_by', 'created_at');
@@ -84,40 +41,50 @@ class ProductApiController extends Controller
                 $query->where('status', $request->get('status'));
             }
             
-            // DEFAULT: Always use pagination for chunked data loading
-            // Set default per_page to 20 for optimal performance
-            $perPage = $request->get('per_page', 20);
-            $perPage = (int)$perPage;
-            // Limit per_page to max 100 to prevent performance issues
-            if ($perPage <= 0 || $perPage > 100) {
-                $perPage = 20;
+            // DEFAULT: Return ALL products without pagination
+            // Only use pagination if explicitly requested with 'paginate=true' parameter
+            $shouldPaginate = $request->get('paginate', false);
+            
+            if ($shouldPaginate === true || $shouldPaginate === 'true' || $shouldPaginate === '1') {
+                // Pagination requested explicitly
+                $perPage = $request->get('per_page', 15);
+                $perPage = (int)$perPage;
+                if ($perPage <= 0) {
+                    $perPage = 15;
+                }
+                $page = $request->get('page', 1);
+                $products = $query->paginate($perPage, ['*'], 'page', $page);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Products retrieved successfully',
+                    'data' => new ProductCollection($products),
+                    'meta' => [
+                        'current_page' => $products->currentPage(),
+                        'last_page' => $products->lastPage(),
+                        'per_page' => $products->perPage(),
+                        'total' => $products->total(),
+                        'from' => $products->firstItem(),
+                        'to' => $products->lastItem(),
+                    ]
+                ]);
             }
             
-            $page = $request->get('page', 1);
-            $page = (int)$page;
-            if ($page <= 0) {
-                $page = 1;
-            }
-            
-            // Use paginate with eager loading optimization
-            // Note: paginate() will use the columns already selected in the query
-            $products = $query->paginate($perPage, ['*'], 'page', $page);
-            
-            // Maintain existing API response structure
-            // ProductCollection handles the 'products' and 'count' structure
-            $collection = new ProductCollection($products);
+            // Return ALL products (DEFAULT BEHAVIOR)
+            $products = $query->get();
+            $total = $products->count();
             
             return response()->json([
                 'success' => true,
                 'message' => 'Products retrieved successfully',
-                'data' => $collection,
+                'data' => new ProductCollection($products),
                 'meta' => [
-                    'current_page' => $products->currentPage(),
-                    'last_page' => $products->lastPage(),
-                    'per_page' => $products->perPage(),
-                    'total' => $products->total(),
-                    'from' => $products->firstItem(),
-                    'to' => $products->lastItem(),
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $total,
+                    'total' => $total,
+                    'from' => 1,
+                    'to' => $total,
                 ]
             ]);
             
@@ -139,20 +106,11 @@ class ProductApiController extends Controller
     public function store(productRequest $request): JsonResponse
     {
         try {
-            // Delete products older than 48 hours before creating a new one
-            $deletedCount = product::where('created_at', '<', now()->subHours(48))->delete();
-            
-            // Create the new product
             $product = product::create($request->validated());
-            
-            $message = 'Product created successfully';
-            if ($deletedCount > 0) {
-                $message .= " ({$deletedCount} old product(s) deleted)";
-            }
             
             return response()->json([
                 'success' => true,
-                'message' => $message,
+                'message' => 'Product created successfully',
                 'data' => new ProductResource($product)
             ], 201);
             
