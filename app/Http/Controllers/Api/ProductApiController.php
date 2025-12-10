@@ -21,7 +21,26 @@ class ProductApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = product::query();
+            // Eager loading optimization - only select columns that are needed
+            $query = product::select([
+                'id',
+                'title',
+                'asin',
+                'ean',
+                'product_url',
+                'img_url',
+                'description',
+                'current_price',
+                'old_price',
+                'de_price',
+                'es_price',
+                'fr_price',
+                'it_price',
+                'posted_at',
+                'status',
+                'created_at',
+                'updated_at'
+            ]);
             
             // Sorting
             $sortBy = $request->get('sort_by', 'created_at');
